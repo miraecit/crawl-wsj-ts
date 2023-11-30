@@ -1,7 +1,7 @@
 
 
 import 'dotenv/config'
-import puppeteer, { Browser, HTTPRequest, Page, connect } from 'puppeteer';
+import puppeteer, { Browser, HTTPRequest, Page } from 'puppeteer';
 import cheerio from 'cheerio'
 import chalk from 'chalk';
 import mysql from 'mysql2/promise'
@@ -14,10 +14,10 @@ import { log } from './log';
 (async () => {    
     const pool = mysql.createPool({
         "host":            "localhost",
-        "user":            "root",
-        "password":        "rnjsxkr534",
-        "database":        "mirae",
-        "connectionLimit": 5
+        "user":            process.env.DB_ID,
+        "password":        process.env.DB_PW,
+        "database":        process.env.DB_SCHMA,
+        "connectionLimit": 1
     })
     const brw: Browser = await puppeteer.launch({headless: 'new', timeout: 50000})
     const pge: Page = await brw.newPage()

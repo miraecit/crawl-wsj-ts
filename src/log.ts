@@ -11,11 +11,15 @@ class log {
     }
 
     static info (message: string) {
-        console.log(chalk.green.bold('[INFO] ') + message)
+        if (this.level === "DEV") {
+            console.log(chalk.green.bold('[INFO] ') + message)
+        }
     }
 
     static warn (message: string) {
-        console.log(chalk.yellow.bold('[WARN] ') + message)
+        if (this.level === "DEV") {
+            console.log(chalk.yellow.bold('[WARN] ') + message)
+        }
     }
 
     static danger (message: string) {
