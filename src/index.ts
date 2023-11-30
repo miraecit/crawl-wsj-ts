@@ -29,7 +29,7 @@ import { log } from './log';
         await crwal(pge, connection)
     }
     catch (err) {
-        log.danger(chalk.yellow.bold('exception'))
+        log.danger(chalk.yellow.bold('stop'))
         log.danger(<string>err)
     }
     finally {
@@ -52,7 +52,7 @@ async function crwal (pge: Page, conn: mysql.PoolConnection): Promise<void> {
                 const content: Content | null = await getContent(pge, url)
                 if (content !== null) {
                     const sqlStatement = `INSERT INTO news (origin, title, content, category, url, created) VALUES (?, ?, ?, ?, ?, ?);`
-                    conn.query(sqlStatement, ['wsj', content.title, content.content, content.category, content.url, content.date])                    
+                    conn.query(sqlStatement, ['wsj', content.title, content.content, content.category, content.url, date.tmp.replace('/', '-')])                    
                 }
             }
         }
@@ -140,6 +140,7 @@ async function login (pge: Page): Promise<void> {
     await pge.waitForTimeout(2000)
     await pge.click('#email-verification > div > div.resend-verification-email > div > div:nth-child(2) > div > div > button.solid-button.reg-rtl-btn')
     await delay(2000)
+    log.info('login done')
 }
 
 
@@ -156,7 +157,7 @@ function parseCategory (url: string): string {
 
 
 
-function formatAndSubtractDay (date: Date): {text: string; before: Date} {
+function formatAndSubtractDay (date: Date): {text: string; before: Date; tmp: string} {
     const originalDate = new Date(date);
     const newDate = new Date(originalDate);
     newDate.setDate(originalDate.getDate() - 1);
@@ -164,6 +165,7 @@ function formatAndSubtractDay (date: Date): {text: string; before: Date} {
         return date.toISOString().slice(0, 10).replace(/-/g, '/');
     }
     return {
+        tmp: formatDate(originalDate),
         text: formatDate(newDate),
         before: newDate
     }
@@ -175,4 +177,18 @@ function delay (time: number) {
     return new Promise((resolve) => { 
         setTimeout(resolve, time)
     });
+}
+
+
+function convertDateFormat(inputDate: string) {
+    log.info(inputDate)
+    const parts = inputDate.replace("Updated ", "").split(" ");
+    const datePart = parts[1].replace(",", "");
+    const monthPart = parts[0].replace(".", "");
+    const yearPart = parts[2];
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthNumber = monthNames.indexOf(monthPart) + 1;
+
+    return `${yearPart}-${monthNumber < 10 ? '0' + monthNumber : monthNumber}-${datePart}`;
 }
