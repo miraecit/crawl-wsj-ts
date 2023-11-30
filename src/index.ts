@@ -10,7 +10,6 @@ import { Content, PageInfo } from './types';
 import { log } from './log';
 
 
-
 (async () => {    
     const pool = mysql.createPool({
         "host":            "localhost",
@@ -30,7 +29,7 @@ import { log } from './log';
         await crwal(pge, connection)
     }
     catch (err) {
-        log.danger(chalk.yellow.bold('STOP CRAWLING, DUE TO UNKNOWN EXCEPTION!!!!!!!!!!!!!!!'))
+        log.danger(chalk.yellow.bold('exception'))
         log.danger(<string>err)
     }
     finally {
