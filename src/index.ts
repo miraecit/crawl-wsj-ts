@@ -6,6 +6,7 @@ import cheerio from 'cheerio'
 import chalk from 'chalk';
 import mysql from 'mysql2/promise'
 
+
 import { Content, PageInfo } from './types';
 import { log } from './log';
 
@@ -18,9 +19,9 @@ import { log } from './log';
         "database":        process.env.DB_SCHMA,
         "connectionLimit": 1
     })
-    const brw: Browser = await puppeteer.launch({headless: 'new', timeout: 50000})
-    const pge: Page = await brw.newPage()
 
+    const brw: Browser = await puppeteer.launch({headless: 'new', timeout: 50000, args: ['--no-sandbox', '--disable-setuid-sandbox']})
+    const pge: Page = await brw.newPage()
     await brwInitalize(pge)
 
     const connection = await pool.getConnection()
@@ -35,7 +36,7 @@ import { log } from './log';
     finally {
         connection.release()
         brw.close()
-    }
+    } 
 })()
 
 
@@ -46,26 +47,28 @@ async function crwal (pge: Page, conn: mysql.PoolConnection): Promise<void> {
     
     while (true) {
         if (info.urls.length === 0) { break }
+
         for (let page=2; page<(parseInt(info.totalPages)+1); page++) {
             for (const url of info.urls) {
                 log.info(chalk.bold(url) + ' crawling...')
+
                 const content: Content | null = await getContent(pge, url)
                 if (content !== null) {
                     const sqlStatement = `INSERT INTO news (origin, title, content, category, url, created) VALUES (?, ?, ?, ?, ?, ?);`
-                    conn.query(sqlStatement, ['wsj', content.title, content.content, content.category, content.url, date.tmp.replace('/', '-')])                    
+                    conn.query(sqlStatement, ['wsj', content.title, content.content, content.category, content.url, date.tmp.replace('/', '-').replace('/', '-')])                    
                 }
             }
         }
 
         date = formatAndSubtractDay(date.before)
-        const url = urlBuilder(date.text, 1)
-        info = await getPageInfo(pge, url)
+        info = await getPageInfo(pge, urlBuilder(date.text, 1))
     }
 }
 
 
 
 async function brwInitalize (pge: Page) {
+    process.title = 'crawller-wsj'
     await pge.setViewport({ height: 1920, width: 1080 })
     await pge.setRequestInterception(true)
     pge.on('request', (req: HTTPRequest) => {
@@ -81,6 +84,7 @@ async function getContent (pge: Page, url: string): Promise<Content | null> {
     await pge.mouse.wheel({deltaY: 5000})
     await delay(1500)
     try {
+        // //*[@id="__next"]/div/main/div[2]/article/div[2]/section
         await pge.waitForXPath('//*[@id="__next"]/div/main/div[2]/article')
     }
     catch {
@@ -92,11 +96,11 @@ async function getContent (pge: Page, url: string): Promise<Content | null> {
     const title = $('#__next > div > main > div.article-container.css-1fasr7.e1wkb4h45 > div.article-header.css-exmfr.e1wkb4h43 > div > div.crawler.css-1skj0ht-Box.e1vnmyci0 > div > h1').text()
     const date  = $('#__next > div > main > div.article-container.css-1fasr7.e1wkb4h45 > article > div.crawler.css-symnra.eui4bu21 > div.eui4bu20.css-hb9xd5 > div > div > div > div.css-11paagg > div > p').text()
     const texts = $('#__next > div > main > div.article-container.css-1fasr7.e1wkb4h45 > article > div.crawler.css-symnra.eui4bu21 > section').find('p')
-    
+
     let content = ""
     for (const text of texts) content += $(text).text()
     
-    return {title, content, date, url: pge.url(), category: parseCategory(pge.url())}
+    return {title, content, date, url: pge.url(), category: parseCategory(pge)}
 }
 
 
@@ -151,8 +155,13 @@ function urlBuilder (date: string, page: number): string {
 
 
 
-function parseCategory (url: string): string {
-    return url.replace('//', '').split('/')[2]
+function parseCategory (pge: Page): string {
+    const category = pge.url().replace('//', '').split('/')[2]
+    if ((category.split('-').length - 1) >= 3) {
+        return category.split('-')[0] + ' ' + category.split('-')[1]
+    }
+
+    return pge.url().replace('//', '').split('/')[2]
 }
 
 
@@ -176,19 +185,5 @@ function formatAndSubtractDay (date: Date): {text: string; before: Date; tmp: st
 function delay (time: number) {
     return new Promise((resolve) => { 
         setTimeout(resolve, time)
-    });
-}
-
-
-function convertDateFormat(inputDate: string) {
-    log.info(inputDate)
-    const parts = inputDate.replace("Updated ", "").split(" ");
-    const datePart = parts[1].replace(",", "");
-    const monthPart = parts[0].replace(".", "");
-    const yearPart = parts[2];
-
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const monthNumber = monthNames.indexOf(monthPart) + 1;
-
-    return `${yearPart}-${monthNumber < 10 ? '0' + monthNumber : monthNumber}-${datePart}`;
+    })
 }
