@@ -2,9 +2,9 @@
 
 구글에서 개발한 **puppeteer** 를 사용하여 뉴스 매체인 **Wall street journal** 의 내용을 크롤링 할 수 있는 학습용 예제 소스입니다.
 <br/>
-
+<p align="center">
 ![제목 없는 다이어그램 drawio](https://github.com/miraecit/crawl-wsj-ts/assets/152238545/6fefbcce-4a93-4a5f-9246-e3e7940b8e7f)
-
+</p>
 
 # Setup
 ***실행환경***
