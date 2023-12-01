@@ -5,7 +5,6 @@
 
 ![wsj](https://github.com/miraecit/crawl-wsj-ts/assets/152238545/6df1490f-9d12-4b91-8b13-1b1a8676dfa2)
 
-<br/>
 # Setup
 ***실행환경***
 - NodeJS v18 이상
