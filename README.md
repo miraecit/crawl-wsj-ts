@@ -1,10 +1,11 @@
 # Crawl
 
 구글에서 개발한 **puppeteer** 를 사용하여 뉴스 매체인 **Wall street journal** 의 내용을 크롤링 할 수 있는 학습용 예제 소스입니다.
+<br/>
 
 ![wsj](https://github.com/miraecit/crawl-wsj-ts/assets/152238545/6df1490f-9d12-4b91-8b13-1b1a8676dfa2)
 
-
+<br/>
 # Setup
 ***실행환경***
 - NodeJS v18 이상
